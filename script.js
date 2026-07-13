@@ -57,3 +57,36 @@ ambient['screen-1'].play().catch(() => {
     }
   }, { once: true });
 });
+
+// Background wanderers (Screen 2): drift to a random spot, then pick a new
+// one, forever — instead of repeating the same fixed path each time.
+function wander(el, { xMin, xMax, yMin, yMax, minDur, maxDur }) {
+  const pick = (min, max) => min + Math.random() * (max - min);
+
+  // place it somewhere in-range immediately, no transition
+  el.style.left = pick(xMin, xMax) + '%';
+  el.style.top = pick(yMin, yMax) + '%';
+
+  function hop() {
+    const duration = pick(minDur, maxDur);
+    requestAnimationFrame(() => {
+      el.style.transition = `left ${duration}s ease-in-out, top ${duration}s ease-in-out`;
+      el.style.left = pick(xMin, xMax) + '%';
+      el.style.top = pick(yMin, yMax) + '%';
+    });
+    setTimeout(hop, duration * 1000);
+  }
+
+  // stagger the first move slightly so multiple wanderers don't move in sync
+  setTimeout(hop, pick(0, 1500));
+}
+
+wander(document.querySelector('.plane-fly'), {
+  xMin: -5, xMax: 85, yMin: 15, yMax: 75, minDur: 8, maxDur: 16,
+});
+wander(document.querySelector('.asteroid1'), {
+  xMin: 0, xMax: 75, yMin: 10, yMax: 90, minDur: 10, maxDur: 18,
+});
+wander(document.querySelector('.asteroid2'), {
+  xMin: 0, xMax: 75, yMin: 10, yMax: 90, minDur: 9, maxDur: 17,
+});
