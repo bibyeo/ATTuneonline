@@ -21,7 +21,7 @@ function goToScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 
-  if (id !== 'screen-4') {
+  if (id !== 'screen-4' && gameplayVideo) {
     gameplayVideo.pause();
   }
 
@@ -42,20 +42,23 @@ const gameplayVideo = document.getElementById('gameplay-video');
 const progressFill = document.getElementById('progress-fill');
 
 function startGameplayVideo() {
+  if (!gameplayVideo) return;
   gameplayVideo.currentTime = 0;
-  progressFill.style.width = '0%';
+  if (progressFill) progressFill.style.width = '0%';
   gameplayVideo.play().catch(() => {}); // blocked only if reached without a user gesture
 }
 
-gameplayVideo.addEventListener('timeupdate', () => {
-  if (gameplayVideo.duration) {
-    progressFill.style.width = (gameplayVideo.currentTime / gameplayVideo.duration) * 100 + '%';
-  }
-});
+if (gameplayVideo) {
+  gameplayVideo.addEventListener('timeupdate', () => {
+    if (gameplayVideo.duration && progressFill) {
+      progressFill.style.width = (gameplayVideo.currentTime / gameplayVideo.duration) * 100 + '%';
+    }
+  });
 
-gameplayVideo.addEventListener('ended', () => {
-  goToScreen('screen-5');
-});
+  gameplayVideo.addEventListener('ended', () => {
+    goToScreen('screen-5');
+  });
+}
 
 // Try to start Screen 1's ambient track on first load.
 // Browsers block unmuted autoplay before any user interaction, so this
