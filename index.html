@@ -10,60 +10,60 @@
   <div class="game-canvas">
 
     <!-- SCREEN 1: Mode Select -->
-    <section id="screen-1" class="screen active" style="background-image:url('assets/screen1/background_horizontal.png');">
-      <img class="sprite island" src="assets/screen1/island.png" alt="">
-      <img class="sprite balloon" src="assets/screen1/balloon.png" alt="">
+    <section id="screen-1" class="screen active" style="background-image:url('screen1/background_horizontal.png');">
+      <img class="sprite island" src="screen1/island.png" alt="">
+      <img class="sprite balloon" src="screen1/balloon.png" alt="">
 
-      <img class="sprite mode-btn unlocked" src="assets/screen1/space_mode.png" data-goto="screen-2" alt="Space Mode">
-      <img class="sprite mode-btn locked" src="assets/screen1/fantasy_mode.png" alt="Fantasy Mode (locked)">
-      <img class="sprite mode-btn locked" src="assets/screen1/jurassic_mode.png" alt="Jurassic Mode (locked)">
-      <img class="sprite mode-btn locked" src="assets/screen1/sky_mode.png" alt="Sky Mode (locked)">
+      <img class="sprite mode-btn unlocked" src="screen1/space_mode.png" data-goto="screen-2" alt="Space Mode">
+      <img class="sprite mode-btn locked" src="screen1/fantasy_mode.png" alt="Fantasy Mode (locked)">
+      <img class="sprite mode-btn locked" src="screen1/jurassic_mode.png" alt="Jurassic Mode (locked)">
+      <img class="sprite mode-btn locked" src="screen1/sky_mode.png" alt="Sky Mode (locked)">
     </section>
 
     <!-- SCREEN 2: Level Select (Space Mode) -->
-    <section id="screen-2" class="screen" style="background-image:url('assets/screen2/background_horizontal.png');">
-      <img class="sprite levels-panel" src="assets/screen2/levels.png" alt="">
-      <img class="sprite asteroid asteroid1" src="assets/screen2/asteroid1.png" alt="">
-      <img class="sprite asteroid asteroid2" src="assets/screen2/asteroid2.png" alt="">
-      <img class="sprite plane-fly" src="assets/screen2/plane.png" alt="">
+    <section id="screen-2" class="screen" style="background-image:url('screen2/background_horizontal.png');">
+      <img class="sprite levels-panel" src="screen2/levels.png" alt="">
+      <img class="sprite asteroid asteroid1" src="screen2/asteroid1.png" alt="">
+      <img class="sprite asteroid asteroid2" src="screen2/asteroid2.png" alt="">
+      <img class="sprite plane-fly" src="screen2/plane.png" alt="">
 
       <!-- clickable overlay: back arrow baked into levels.png -->
       <button class="hit-area back-hit" data-goto="screen-1" aria-label="Back"></button>
       <!-- clickable overlay: level 1 glow, baked position over levels.png -->
-      <img class="sprite lv1-glow" src="assets/screen2/lv1.png" data-goto="screen-3" alt="Level 1: Training">
+      <img class="sprite lv1-glow" src="screen2/lv1.png" data-goto="screen-3" alt="Level 1: Training">
     </section>
 
     <!-- SCREEN 3: Level Intro -->
-    <section id="screen-3" class="screen" style="background-image:url('assets/screen3/background.png');">
-      <img class="sprite ship-shadow" src="assets/screen3/shadow.png" alt="">
-      <img class="sprite ship" src="assets/screen3/plane.png" alt="">
-      <img class="sprite back-btn" src="assets/screen3/back.png" data-goto="screen-2" alt="Back">
-      <img class="sprite start-btn" src="assets/screen3/start.png" data-goto="screen-4" alt="Start">
+    <section id="screen-3" class="screen" style="background-image:url('screen3/background.png');">
+      <img class="sprite ship-shadow" src="screen3/shadow.png" alt="">
+      <img class="sprite ship" src="screen3/plane.png" alt="">
+      <img class="sprite back-btn" src="screen3/back.png" data-goto="screen-2" alt="Back">
+      <img class="sprite start-btn" src="screen3/start.png" data-goto="screen-4" alt="Start">
     </section>
 
     <!-- SCREEN 4: Game In Progress -->
     <section id="screen-4" class="screen gameplay">
-      <video class="gameplay-video" src="assets/screen4/video.mp4" autoplay muted loop playsinline></video>
-      <img class="sprite back-btn" src="assets/screen4/back.png" data-goto="screen-3" alt="Back">
+      <video class="gameplay-video" src="screen4/video.mp4" autoplay muted loop playsinline></video>
+      <img class="sprite back-btn" src="screen4/back.png" data-goto="screen-3" alt="Back">
       <div class="progress-bar-track">
         <div class="progress-bar-fill" id="progress-fill"></div>
       </div>
     </section>
 
     <!-- SCREEN 5: Level Complete -->
-    <section id="screen-5" class="screen" style="background-image:url('assets/screen5/background.png');">
-      <img class="sprite ship-shadow" src="assets/screen5/shadow.png" alt="">
-      <img class="sprite ship" src="assets/screen5/plane.png" alt="">
-      <img class="sprite back-btn" src="assets/screen5/back.png" data-goto="screen-3" alt="Back">
-      <img class="sprite continue-btn" src="assets/screen5/continue.png" data-goto="screen-2" alt="Continue">
+    <section id="screen-5" class="screen" style="background-image:url('screen5/background.png');">
+      <img class="sprite ship-shadow" src="screen5/shadow.png" alt="">
+      <img class="sprite ship" src="screen5/plane.png" alt="">
+      <img class="sprite back-btn" src="screen5/back.png" data-goto="screen-3" alt="Back">
+      <img class="sprite continue-btn" src="screen5/continue.png" data-goto="screen-2" alt="Continue">
     </section>
 
   </div>
 
   <!-- Sound effects -->
-  <audio id="sfx-button" src="assets/sound/button_press.wav"></audio>
-  <audio id="ambient-screen1" src="assets/sound/screen1.mp3" loop></audio>
-  <audio id="ambient-screen2" src="assets/sound/screen2.mp3" loop></audio>
+  <audio id="sfx-button" src="sound/button_press.wav"></audio>
+  <audio id="ambient-screen1" src="sound/screen1.mp3" loop></audio>
+  <audio id="ambient-screen2" src="sound/screen2.mp3" loop></audio>
 
   <script src="script.js"></script>
 </body>
