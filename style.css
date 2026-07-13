@@ -101,37 +101,31 @@ html, body {
 }
 
 .asteroid1 {
-  left: 3%; top: 78%;
   width: 8.5%;
-  animation: drift 6s ease-in-out infinite;
+  animation: tumble 9s linear infinite;
 }
 
 .asteroid2 {
-  left: 4%; top: 38%;
   width: 3.5%;
-  animation: drift 5s ease-in-out infinite reverse;
+  animation: tumble 7s linear infinite reverse;
 }
 
-@keyframes drift {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  50% { transform: translate(6px, -10px) rotate(8deg); }
+@keyframes tumble {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 .plane-fly {
-  top: 54%;
   width: 25%;
-  animation: fly-across 12s linear infinite;
 }
-
-@keyframes fly-across {
-  0%   { left: -30%; }
-  100% { left: 100%; }
-}
+/* left/top and the transition duration for these three are set from
+   script.js, which picks a new random spot to drift toward on a loop —
+   see wander() in script.js */
 
 /* ---------- SCREEN 3 & 5: Intro / Complete ---------- */
 /* left:50% + translateX(-50%) centers each sprite on the canvas regardless
    of its own width — the old left-edge percentages didn't actually center them. */
-.ship-shadow { left: 50%; top: 64%; width: 40%; transform: translateX(-50%); }
+.ship-shadow { left: 50%; top: 66%; width: 40%; transform: translateX(-50%); }
 .ship        { left: 50%; top: 44%; width: 46%; animation: idle-float 3.5s ease-in-out infinite; }
 
 @keyframes idle-float {
