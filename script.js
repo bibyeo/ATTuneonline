@@ -21,6 +21,10 @@ function goToScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 
+  if (id !== 'screen-4') {
+    gameplayVideo.pause();
+  }
+
   // stop all ambient tracks, then play the one for this screen (if any)
   Object.values(ambient).forEach(a => a.pause());
   if (ambient[id]) {
@@ -28,24 +32,30 @@ function goToScreen(id) {
     ambient[id].play().catch(() => {});
   }
 
-  if (id === 'screen-4') startProgressDemo();
+  if (id === 'screen-4') startGameplayVideo();
 }
 
-// Placeholder progress bar animation for Screen 4 (Game in Progress)
-// Replace with real gameplay progress tracking later
-function startProgressDemo() {
-  const fill = document.getElementById('progress-fill');
-  fill.style.width = '0%';
-  let pct = 0;
-  const interval = setInterval(() => {
-    pct += 2;
-    fill.style.width = pct + '%';
-    if (pct >= 100) {
-      clearInterval(interval);
-      goToScreen('screen-5');
-    }
-  }, 150);
+// Screen 4: play the gameplay video (with audio) start to finish.
+// The progress bar tracks real playback time, and Screen 5 is triggered
+// by the video actually ending — not a fixed timer.
+const gameplayVideo = document.getElementById('gameplay-video');
+const progressFill = document.getElementById('progress-fill');
+
+function startGameplayVideo() {
+  gameplayVideo.currentTime = 0;
+  progressFill.style.width = '0%';
+  gameplayVideo.play().catch(() => {}); // blocked only if reached without a user gesture
 }
+
+gameplayVideo.addEventListener('timeupdate', () => {
+  if (gameplayVideo.duration) {
+    progressFill.style.width = (gameplayVideo.currentTime / gameplayVideo.duration) * 100 + '%';
+  }
+});
+
+gameplayVideo.addEventListener('ended', () => {
+  goToScreen('screen-5');
+});
 
 // Try to start Screen 1's ambient track on first load.
 // Browsers block unmuted autoplay before any user interaction, so this
