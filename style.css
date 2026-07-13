@@ -1,0 +1,172 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+/* Fixed-aspect game canvas (matches 1350x1080 source art), letterboxed on any screen */
+.game-canvas {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  max-width: 135vh;   /* 1350/1080 aspect ratio lock */
+  max-height: 80vw;
+  margin: 0 auto;
+  overflow: hidden;
+  background: #000;
+}
+
+@media (min-aspect-ratio: 1350/1080) {
+  .game-canvas { height: 100vh; width: calc(100vh * 1350 / 1080); }
+}
+@media (max-aspect-ratio: 1350/1080) {
+  .game-canvas { width: 100vw; height: calc(100vw * 1080 / 1350); }
+}
+
+.screen {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.screen.active { display: block; }
+
+.sprite {
+  position: absolute;
+  width: auto;
+  cursor: default;
+}
+
+[data-goto] {
+  cursor: pointer;
+}
+
+.hit-area {
+  position: absolute;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+/* ---------- SCREEN 1: Mode Select ---------- */
+.mode-btn { left: 44%; width: 50%; }
+.mode-btn.locked { opacity: 0.55; }
+.mode-btn[src*="space_mode"]    { top: 8%; }
+.mode-btn[src*="fantasy_mode"]  { top: 27%; }
+.mode-btn[src*="jurassic_mode"] { top: 46%; }
+.mode-btn[src*="sky_mode"]      { top: 65%; }
+
+.island {
+  left: 74%;
+  top: 56%;
+  width: 22%;
+  animation: bounce 3.2s ease-in-out infinite;
+}
+
+.balloon {
+  left: 80%;
+  top: 36%;
+  width: 16%;
+  animation: bounce 3.2s ease-in-out infinite;
+  animation-delay: 0.3s;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+
+/* ---------- SCREEN 2: Level Select ---------- */
+.levels-panel { left: 0; top: 0; width: 100%; }
+
+.back-hit {
+  left: 2%; top: 2%;
+  width: 8%; height: 9%;
+}
+
+.lv1-glow {
+  left: 16.5%; top: 9%;
+  width: 17.5%;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { filter: brightness(1); transform: scale(1); }
+  50% { filter: brightness(1.35); transform: scale(1.04); }
+}
+
+.asteroid1 {
+  left: 3%; top: 78%;
+  width: 8.5%;
+  animation: drift 6s ease-in-out infinite;
+}
+
+.asteroid2 {
+  left: 4%; top: 38%;
+  width: 3.5%;
+  animation: drift 5s ease-in-out infinite reverse;
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(6px, -10px) rotate(8deg); }
+}
+
+.plane-fly {
+  top: 54%;
+  width: 25%;
+  animation: fly-across 12s linear infinite;
+}
+
+@keyframes fly-across {
+  0%   { left: -30%; }
+  100% { left: 100%; }
+}
+
+/* ---------- SCREEN 3 & 5: Intro / Complete ---------- */
+.ship-shadow { left: 33%; top: 64%; width: 40%; }
+.ship        { left: 32%; top: 44%; width: 46%; animation: idle-float 3.5s ease-in-out infinite; }
+
+@keyframes idle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.back-btn  { left: 2%; top: 4%; width: 6%; }
+.start-btn { left: 38%; top: 79%; width: 30%; }
+.continue-btn { left: 37%; top: 79%; width: 31%; }
+
+/* ---------- SCREEN 4: Gameplay ---------- */
+.screen.gameplay { background: #000; }
+
+.gameplay-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.progress-bar-track {
+  position: absolute;
+  bottom: 4%;
+  left: 8%;
+  width: 84%;
+  height: 2%;
+  background: rgba(255,255,255,0.15);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  width: 0%;
+  height: 100%;
+  background: #4fc3f7;
+  box-shadow: 0 0 8px #4fc3f7;
+  transition: width 0.3s linear;
+}
