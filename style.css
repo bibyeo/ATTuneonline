@@ -84,11 +84,6 @@ html, body {
 /* ---------- SCREEN 2: Level Select ---------- */
 .levels-panel { left: 0; top: 0; width: 100%; }
 
-.back-hit {
-  left: 2%; top: 2%;
-  width: 8%; height: 9%;
-}
-
 .lv1-glow {
   left: 19.85%; top: 10.83%;
   width: 15.26%;
