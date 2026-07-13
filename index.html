@@ -22,10 +22,12 @@
 
     <!-- SCREEN 2: Level Select (Space Mode) -->
     <section id="screen-2" class="screen" style="background-image:url('screen2/background_horizontal.png');">
-      <img class="sprite levels-panel" src="screen2/levels.png" alt="">
+      <!-- background wanderers first so the level panel renders on top of them -->
       <img class="sprite asteroid asteroid1" src="screen2/asteroid1.png" alt="">
       <img class="sprite asteroid asteroid2" src="screen2/asteroid2.png" alt="">
       <img class="sprite plane-fly" src="screen2/plane.png" alt="">
+
+      <img class="sprite levels-panel" src="screen2/levels.png" alt="">
 
       <!-- clickable overlay: back arrow baked into levels.png -->
       <button class="hit-area back-hit" data-goto="screen-1" aria-label="Back"></button>
@@ -62,8 +64,8 @@
 
   <!-- Sound effects -->
   <audio id="sfx-button" src="sound/button_press.wav"></audio>
-  <audio id="ambient-screen1" src="sound/screen1.mp3" loop></audio>
-  <audio id="ambient-screen2" src="sound/screen2.mp3" loop></audio>
+  <audio id="ambient-screen1" src="sound/screen1.wav" loop></audio>
+  <audio id="ambient-screen2" src="sound/screen2.wav" loop></audio>
 
   <script src="script.js"></script>
 </body>
