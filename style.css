@@ -90,8 +90,8 @@ html, body {
 }
 
 .lv1-glow {
-  left: 16.5%; top: 9%;
-  width: 17.5%;
+  left: 19.85%; top: 10.83%;
+  width: 15.26%;
   animation: pulse 1.6s ease-in-out infinite;
 }
 
@@ -129,17 +129,19 @@ html, body {
 }
 
 /* ---------- SCREEN 3 & 5: Intro / Complete ---------- */
-.ship-shadow { left: 33%; top: 64%; width: 40%; }
-.ship        { left: 32%; top: 44%; width: 46%; animation: idle-float 3.5s ease-in-out infinite; }
+/* left:50% + translateX(-50%) centers each sprite on the canvas regardless
+   of its own width — the old left-edge percentages didn't actually center them. */
+.ship-shadow { left: 50%; top: 64%; width: 40%; transform: translateX(-50%); }
+.ship        { left: 50%; top: 44%; width: 46%; animation: idle-float 3.5s ease-in-out infinite; }
 
 @keyframes idle-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, -8px); }
 }
 
 .back-btn  { left: 2%; top: 4%; width: 6%; }
-.start-btn { left: 38%; top: 79%; width: 30%; }
-.continue-btn { left: 37%; top: 79%; width: 31%; }
+.start-btn    { left: 50%; top: 79%; width: 30%; transform: translateX(-50%); }
+.continue-btn { left: 50%; top: 79%; width: 31%; transform: translateX(-50%); }
 
 /* ---------- SCREEN 4: Gameplay ---------- */
 .screen.gameplay { background: #000; }
