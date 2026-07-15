@@ -57,7 +57,7 @@ html, body {
 }
 
 /* ---------- SCREEN 1: Mode Select ---------- */
-.mode-btn { left: 44%; width: 50%; }
+.mode-btn { left: 50%; width: 50%; transform: translateX(-50%); }
 .mode-btn.locked { opacity: 0.55; }
 .mode-btn[src*="space_mode"]    { top: 8%; }
 .mode-btn[src*="fantasy_mode"]  { top: 27%; }
