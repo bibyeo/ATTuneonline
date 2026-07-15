@@ -5,6 +5,9 @@ html, body {
   height: 100%;
   background: #000;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Fixed-aspect game canvas (matches 1350x1080 source art), letterboxed on any screen */
