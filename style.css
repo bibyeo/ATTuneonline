@@ -59,10 +59,10 @@ html, body {
 /* ---------- SCREEN 1: Mode Select ---------- */
 .mode-btn { left: 50%; width: 50%; transform: translateX(-50%); }
 .mode-btn.locked { opacity: 0.55; }
-.mode-btn[src*="space_mode"]    { top: 12.25%; }
-.mode-btn[src*="fantasy_mode"]  { top: 31.25%; }
-.mode-btn[src*="jurassic_mode"] { top: 50.25%; }
-.mode-btn[src*="sky_mode"]      { top: 69.25%; }
+.mode-btn[src*="space_mode"]    { top: 22.25%; }
+.mode-btn[src*="fantasy_mode"]  { top: 41.25%; }
+.mode-btn[src*="jurassic_mode"] { top: 60.25%; }
+.mode-btn[src*="sky_mode"]      { top: 79.25%; }
 
 .island {
   left: 74%;
