@@ -193,7 +193,11 @@ kbd{font-family:var(--mono);font-size:11px;letter-spacing:.04em}
 .lv-list li.sel .rec{border-color:#fff;color:#fff}
 .lv-list li.is-rec .lv{box-shadow:inset 0 0 0 2px var(--red)}
 .age-row{display:flex;align-items:baseline;gap:12px;margin:0 0 18px}
-.age-row b{font-size:18px}
+.age-step{display:inline-flex;align-items:center;border:1px solid rgba(11,11,13,.35)}
+.age-arrow{width:40px;height:40px;display:grid;place-items:center;border:0;background:transparent;color:var(--ink)}
+.age-arrow svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2}
+.age-arrow:hover{background:var(--ink);color:var(--chalk)}
+#age-show{min-width:3.2ch;text-align:center;font-size:18px}
 .link-btn{padding:0;border:0;background:none;font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--red);text-decoration:underline;text-underline-offset:3px}
 .modal{position:fixed;inset:0;z-index:8;display:grid;place-items:center;padding:var(--g);background:rgba(242,239,234,.6);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:fadeIn .25s ease both}
 @keyframes fadeIn{from{opacity:0}}
@@ -270,6 +274,6 @@ kbd{font-family:var(--mono);font-size:11px;letter-spacing:.04em}
   // Paste your marking function URL here once it is deployed (see README). Leave empty to use keyword marking.
   window.ATTUNE_CONFIG = { markingEndpoint: "" };
 </script>
-<script src="js/attune.js"></script>
+<script src="js/attune.js?v=d194b777cc"></script>
 </body>
 </html>
