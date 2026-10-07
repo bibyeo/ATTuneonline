@@ -489,12 +489,6 @@ function buildClassroom(){
   addVox("Dog", 0.62, 2.9, 0, 3.1, -2.4, 0.5);                   // by the windows at the front
   addVox("Duck", 0.34, 0.99, 0.845, 1.8, Math.PI, 0.7);          // sitting on an empty desk
   addVox("Rabbit", 0.3, 3.35, 1.5, 4.47, Math.PI, 0.6);          // on top of the bookshelf
-  const dog2 = addVox("Dog", 0.5, -2.2, 0, 2.75, 1.2, 0.4);        // another dog, wandering along the front
-  dog2.userData.wander = { axis:"x", mid:-2.4, range:1.1, speed:0.35, rotA:Math.PI/2, rotB:-Math.PI/2 };
-  const pea = makeSprite(["peacock"], 0.95, {}); pea.position.set(-3.35, 0, 1.6); pea.userData.idle = 0.5; scene.add(pea); figures.push(pea); animals.push(pea);
-  pea.userData.wander = { axis:"z", mid:1.0, range:1.6, speed:0.22, face:1 };
-  const porc = makeSprite(["porcupine"], 0.36, {}); porc.position.set(0.1, 0, 0.5); scene.add(porc); figures.push(porc); animals.push(porc);
-  porc.userData.wander = { axis:"z", mid:0.2, range:1.6, speed:0.3, face:-1 };
 
   // the teacher: Derpy, whose mouth moves when he talks
   const teacher = makeSprite(["derpy0"], 2.1, { frames:["derpy0","derpy1"] });
