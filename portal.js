@@ -19,6 +19,7 @@
   }
   const rcode = ()=>hex(crypto.getRandomValues(new Uint8Array(6))).toUpperCase().match(/.{4}/g).join('-');
   const okPw = pw=>{ if (pw.length < 8) throw Error('Use at least 8 characters for your password.'); };
+  const DEMO = { email:'admin12345', pw:'admin12345', name:'Admin' };
   const Auth = {
     current: ()=>sessionStorage.getItem('attune.user'),
     async signUp(name, email, pw){
@@ -30,7 +31,14 @@
       save(); sessionStorage.setItem('attune.user', email); return rc;
     },
     async signIn(email, pw){
-      email = email.trim().toLowerCase(); const u = db.users[email];
+      email = email.trim().toLowerCase();
+      /* Public demo login, open to anyone: the first time these credentials are used in a browser the account is created there.
+         Like every account here it lives only in that browser, so nobody ever sees anyone else's data. */
+      if (email === DEMO.email && pw === DEMO.pw && !db.users[email]) {
+        const salt = uid() + uid();
+        db.users[email] = { name:DEMO.name, salt, hash:await hash(pw, salt), consent:new Date().toISOString(), demo:true }; db.data[email] = { children:[] }; save();
+      }
+      const u = db.users[email];
       if (!u || u.hash !== await hash(pw, u.salt)) throw Error('Email or password is incorrect.');
       sessionStorage.setItem('attune.user', email);
     },
