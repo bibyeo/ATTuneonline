@@ -8,12 +8,17 @@ function spawnWord(v3, text, cls="", life=null){
   const p = W3.ok ? project(v3) : { x: innerWidth*(0.12 + Math.random()*0.76), y: innerHeight*(0.3 + Math.random()*0.35) };
   if (!p) return;
   if (labels.children.length > 9) labels.firstElementChild.remove();
+  /* a speaker who is off to the side or above the frame still gets a bubble, pinned to the nearest edge with an arrow */
+  const side = p.x < 0 ? "◀ " : p.x > innerWidth ? " ▶" : "";
+  const y = Math.max(94, Math.min(innerHeight - 40, p.y));
   const el = document.createElement("div");
-  el.className = "word " + cls; el.textContent = text;
-  el.style.left = p.x + "px"; el.style.top = p.y + "px";
+  el.className = "word " + cls; el.textContent = p.x < 0 ? side + text : text + side;
+  el.style.left = p.x + "px"; el.style.top = y + "px";
   if (life) el.style.setProperty("--life", life + "s");
   el.addEventListener("animationend", () => el.remove());
   labels.appendChild(el);
+  const half = el.offsetWidth/2 + 8;
+  el.style.left = Math.max(half, Math.min(innerWidth - half, p.x)) + "px";
 }
 
 /* HUD */
@@ -307,7 +312,7 @@ async function stage2(){
         if (f) {
           f.userData.talkTarget = 1; f.userData.turnTarget = 0.3;
           if (ev.who === "Leo") f.userData.standTarget = 1;
-          spawnWord(headWorld(f, 0.55), ev.text, "say", ev.d + 1.3);
+          spawnWord(headWorld(f, 0.16), ev.text, "say", ev.d + 1.3);
           setTimeout(() => { f.userData.talkTarget = 0; if (ev.who === "Leo") setTimeout(() => { f.userData.standTarget = 0; }, 900); }, (ev.d + 0.3)*1000);
         }
         return false;
@@ -393,7 +398,7 @@ async function stage3(){
         const f = room.gossip[ev.who - 1];
         f.userData.talkTarget = 1;
         setTimeout(() => { f.userData.talkTarget = 0; }, ev.d*1000);
-        spawnWord(headWorld(f, 0.5), WHISPER_WORDS[gi++ % WHISPER_WORDS.length], "whisper");
+        spawnWord(headWorld(f, 0.16), WHISPER_WORDS[gi++ % WHISPER_WORDS.length], "whisper");
         return false;
       }
       return true;
@@ -477,7 +482,7 @@ async function stage3Assembly(){
     pending = pending.filter(ev => {
       if (el >= ev.t) { const fig = room.gossip[ev.who - 1]; fig.userData.talkTarget = 1;
         setTimeout(() => { fig.userData.talkTarget = 0; }, ev.d*1000);
-        spawnWord(headWorld(fig, 0.5), KID_WHISPER_WORDS[wi++ % KID_WHISPER_WORDS.length], "whisper"); return false; }
+        spawnWord(headWorld(fig, 0.16), KID_WHISPER_WORDS[wi++ % KID_WHISPER_WORDS.length], "whisper"); return false; }
       return true;
     });
   };
