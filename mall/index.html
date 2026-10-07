@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ATTune Saturday Errands</title>
+<meta name="description" content="Level one of the listening game, restyled: a busy mall, a lost child, a shopping list and a flash mob. Find your voice in the crowd.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/mall.css?v=20261008a">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="stage" aria-hidden="true"></div>
+<div class="vignette"></div>
+
+<header class="hud" id="hud" hidden>
+  <div class="brand">ATTune <span>Saturday Errands</span></div>
+  <ol class="parts" id="hudParts" aria-label="Parts of the level"></ol>
+  <div class="hud-actions">
+    <span class="clock" id="clock">0:00</span>
+    <button class="chip" id="muteBtn" type="button">Sound on</button>
+    <button class="chip" id="pauseBtn" type="button">Pause</button>
+    <a class="chip" href="../" aria-label="Back to ATTune">Quit</a>
+  </div>
+</header>
+
+<div class="phone" id="phone" role="status" hidden><span class="ico" aria-hidden="true"></span><b id="phoneName"></b><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
+<div class="tip" id="tip" role="status" hidden></div>
+<section class="title" id="title" hidden></section>
+<section class="box" id="dock" hidden aria-live="polite"></section>
+
+<section class="loader" id="loader">
+  <div class="loader-card">
+    <p class="eyebrow">ATTune &middot; Listening levels &middot; Level 1</p>
+    <h1>Saturday Errands</h1>
+    <p>A lost child, a shopping list and a flash mob. Find your voice in the crowd. Five parts, about five minutes.</p>
+    <div class="bar"><span id="loadBar"></span></div>
+    <div class="hp"><button type="button" class="chip" data-hp="L">Left ear</button><button type="button" class="chip" data-hp="R">Right ear</button><span class="hint">Headphones on. Voices come from different sides. Check both, then hold the button.</span></div>
+    <div id="enterWrap"></div>
+    <p class="fine">Ages 7 and up. This is a game, not a diagnosis. 3D animals: &ldquo;Voxel Animals Collection&rdquo; by Ay23man, CC BY 4.0 (Sketchfab).</p>
+  </div>
+</section>
+
+<section class="results" id="results" hidden></section>
+<div class="veil" id="veil" hidden><h2>Paused</h2><button class="btn" id="resumeBtn" type="button">Resume</button></div>
+
+<script src="js/data.js?v=20261008a"></script>
+<script src="js/audio.js?v=20261008a"></script>
+<script src="js/scene.js?v=20261008a"></script>
+<script src="js/game.js?v=20261008a"></script>
+<script type="module" src="js/three-boot.js?v=20261008a"></script>
+</body>
+</html>
