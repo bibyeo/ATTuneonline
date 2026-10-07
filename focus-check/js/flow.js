@@ -4,22 +4,34 @@ try { samplePromise = (window.claude && typeof window.claude.use === "function")
 catch(e){ samplePromise = Promise.resolve(null); }
 
 const labels = $("#labels");
-function spawnWord(v3, text, cls="", life=null){
-  const p = W3.ok ? project(v3) : { x: innerWidth*(0.12 + Math.random()*0.76), y: innerHeight*(0.3 + Math.random()*0.35) };
-  if (!p) return;
+/* A word or speech bubble follows the head it belongs to: `at` is a world position, or a function returning one,
+   so the bubble stays on its speaker while the player looks around. A speaker who is off to the side or above the
+   frame keeps their bubble pinned to the nearest edge, with an arrow showing which way they are. */
+function placeWord(el){
+  const v = el._at && el._at();
+  const p = W3.ok && v ? project(v) : el._p;
+  if (!p) { el.style.visibility = "hidden"; return; }
+  el.style.visibility = "";
+  const side = p.x < 0 ? "left" : p.x > innerWidth ? "right" : "";
+  if (el._side !== side) { el._side = side; el.textContent = side === "left" ? "◀ " + el._text : side === "right" ? el._text + " ▶" : el._text; el._half = el.offsetWidth/2 + 8; }
+  el.style.left = Math.max(el._half, Math.min(innerWidth - el._half, p.x)) + "px";
+  el.style.top = Math.max(94, Math.min(innerHeight - 40, p.y)) + "px";
+}
+function spawnWord(at, text, cls="", life=null){
+  const getAt = typeof at === "function" ? at : () => at;
+  const fixed = W3.ok ? null : { x: innerWidth*(0.12 + Math.random()*0.76), y: innerHeight*(0.3 + Math.random()*0.35) };
+  if (W3.ok && !getAt()) return;
   if (labels.children.length > 9) labels.firstElementChild.remove();
-  /* a speaker who is off to the side or above the frame still gets a bubble, pinned to the nearest edge with an arrow */
-  const side = p.x < 0 ? "◀ " : p.x > innerWidth ? " ▶" : "";
-  const y = Math.max(94, Math.min(innerHeight - 40, p.y));
   const el = document.createElement("div");
-  el.className = "word " + cls; el.textContent = p.x < 0 ? side + text : text + side;
-  el.style.left = p.x + "px"; el.style.top = y + "px";
+  el.className = "word " + cls; el.textContent = text;
+  el._text = text; el._at = getAt; el._p = fixed; el._side = null;
   if (life) el.style.setProperty("--life", life + "s");
   el.addEventListener("animationend", () => el.remove());
   labels.appendChild(el);
-  const half = el.offsetWidth/2 + 8;
-  el.style.left = Math.max(half, Math.min(innerWidth - half, p.x)) + "px";
+  el._half = el.offsetWidth/2 + 8;
+  placeWord(el);
 }
+function trackWords(){ for (const el of labels.children) placeWord(el); }
 
 /* HUD */
 function hud({ name=null, pause=false }={}){
@@ -175,7 +187,7 @@ function chatterBehaviour(room, kids, { words=true }={}){
     kids.forEach(k => { k.userData.talkTarget = active.has(k) ? Math.min(1, n*9) : 0; });
     if (words && t - lastWord > 0.3 && active.size) {
       lastWord = t;
-      if (Math.random() < n*3.6) spawnWord(headWorld(pick([...active])), pick(CHATTER_WORDS));
+      if (Math.random() < n*3.6) { const who = pick([...active]); spawnWord(() => headWorld(who), pick(CHATTER_WORDS)); };
     }
   };
 }
@@ -312,7 +324,7 @@ async function stage2(){
         if (f) {
           f.userData.talkTarget = 1; f.userData.turnTarget = 0.3;
           if (ev.who === "Leo") f.userData.standTarget = 1;
-          spawnWord(headWorld(f, 0.16), ev.text, "say", ev.d + 1.3);
+          spawnWord(() => headWorld(f, 0.16), ev.text, "say", ev.d + 1.3);
           setTimeout(() => { f.userData.talkTarget = 0; if (ev.who === "Leo") setTimeout(() => { f.userData.standTarget = 0; }, 900); }, (ev.d + 0.3)*1000);
         }
         return false;
@@ -398,7 +410,7 @@ async function stage3(){
         const f = room.gossip[ev.who - 1];
         f.userData.talkTarget = 1;
         setTimeout(() => { f.userData.talkTarget = 0; }, ev.d*1000);
-        spawnWord(headWorld(f, 0.16), WHISPER_WORDS[gi++ % WHISPER_WORDS.length], "whisper");
+        spawnWord(() => headWorld(f, 0.16), WHISPER_WORDS[gi++ % WHISPER_WORDS.length], "whisper");
         return false;
       }
       return true;
@@ -482,7 +494,7 @@ async function stage3Assembly(){
     pending = pending.filter(ev => {
       if (el >= ev.t) { const fig = room.gossip[ev.who - 1]; fig.userData.talkTarget = 1;
         setTimeout(() => { fig.userData.talkTarget = 0; }, ev.d*1000);
-        spawnWord(headWorld(fig, 0.16), KID_WHISPER_WORDS[wi++ % KID_WHISPER_WORDS.length], "whisper"); return false; }
+        spawnWord(() => headWorld(fig, 0.16), KID_WHISPER_WORDS[wi++ % KID_WHISPER_WORDS.length], "whisper"); return false; }
       return true;
     });
   };

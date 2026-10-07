@@ -499,7 +499,7 @@ function doTasks(round, seconds, n, of){
     const pm = e => {
       if (down) {
         const dx = e.clientX - down.x, dy = e.clientY - down.y;
-        if (dragged || Math.abs(dx) + Math.abs(dy) > 5) { dragged = true; turnBy(-dx*0.006, dy*0.0045); down = { x:e.clientX, y:e.clientY }; tip.hidden = true; setHover(null); }
+        if (dragged || Math.abs(dx) + Math.abs(dy) > 5) { dragged = true; turnBy(dx*0.006, dy*0.0045); down = { x:e.clientX, y:e.clientY }; tip.hidden = true; setHover(null); }
         return;
       }
       if (onUI(e) || overlay || !menu.hidden) { tip.hidden = true; if (overlay) setHover(null); document.body.style.cursor = ""; return; }

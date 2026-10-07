@@ -154,6 +154,7 @@ function frameBody(){
   const v = level(A.voiceAn), n = level(A.noiseAn);
   for (const f of Array.from(ticks)) { try { f(t, v, n); } catch(e) { console.error(e); } }
   try { render3D(t); } catch(e) { console.error(e); }
+  if (typeof trackWords === "function") try { trackWords(); } catch(e) { console.error(e); }
 }
 requestAnimationFrame(frame);
 setInterval(() => {                                   // iOS parks animation frames around the keyboard: keep the game moving
