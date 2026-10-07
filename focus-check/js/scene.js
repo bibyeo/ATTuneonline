@@ -679,7 +679,8 @@ function render3D(t){
   const nowMs = performance.now(), dt = Math.min(0.25, (nowMs - (W3.lastMs || nowMs))/1000); W3.lastMs = nowMs;
   if (W3.free) {                    // stage 2: you sit at your desk and look around freely
     const F = W3.free;
-    F.yaw += (F.tyaw - F.yaw)*(1 - Math.exp(-dt*8)); F.pitch += (F.tpitch - F.pitch)*(1 - Math.exp(-dt*8));
+    const k = 1 - Math.exp(-dt*(nowMs - (F.snap || 0) < 150 ? 40 : 8));   // while dragging, keep up with the cursor
+    F.yaw += (F.tyaw - F.yaw)*k; F.pitch += (F.tpitch - F.pitch)*k;
     const back = Math.max(0, -Math.cos(F.yaw));          // turned round: stand up and step into the aisle so the back of the room is in view
     if (!F.tp) F.tp = V(0,0,0);
     F.tp.copy(F.pos); if (F.backOff) F.tp.addScaledVector(F.backOff, back);

@@ -493,13 +493,15 @@ function doTasks(round, seconds, n, of){
       }
     };
 
+    /* dragging pins the scene to the cursor: whatever you grab moves exactly as far as the mouse does */
+    const dragLook = (dx, dy) => { if (!W3.free || !W3.camera) return; const focal = (innerHeight/2)/Math.tan(W3.camera.fov*Math.PI/360); W3.free.snap = performance.now(); turnBy(dx/focal, dy/focal); };
     /* --- input --- */
     const onUI = e => e.target && e.target.closest && e.target.closest(".taskpanel, .actmenu, .hud, .veil, .results, .work");
     const pd = e => { if (onUI(e) || overlay) return; closeMenu(); down = { x:e.clientX, y:e.clientY }; dragged = false; };
     const pm = e => {
       if (down) {
         const dx = e.clientX - down.x, dy = e.clientY - down.y;
-        if (dragged || Math.abs(dx) + Math.abs(dy) > 5) { dragged = true; turnBy(dx*0.006, dy*0.0045); down = { x:e.clientX, y:e.clientY }; tip.hidden = true; setHover(null); }
+        if (dragged || Math.abs(dx) + Math.abs(dy) > 5) { dragged = true; dragLook(dx, dy); down = { x:e.clientX, y:e.clientY }; tip.hidden = true; setHover(null); }
         return;
       }
       if (onUI(e) || overlay || !menu.hidden) { tip.hidden = true; if (overlay) setHover(null); document.body.style.cursor = ""; return; }
