@@ -1,6 +1,6 @@
 const STAGES = [
   {title:"What did the teacher say?", text:"Your English teacher is reading a story, but the class won't stop talking. Listen closely. Questions come after each part.", button:"Start stage 1"},
-  {title:"Hang on, what was I doing?", text:"Your teacher gives you instructions at your desk, but keeps getting interrupted. After each one, tap the steps she asked you to do, in order.", button:"Start stage 2"},
+  {title:"Hang on, what was I doing?", text:"Your teacher gives you instructions at your desk, but keeps getting interrupted. After each one, actually do what he asked, in order: turn around, pick things up, write in your book.", button:"Start stage 2"},
   {title:"The world's most boring lecture", text:"Take notes while the lecturer talks. Not everyone around you is paying attention. Afterwards, write a short summary for AI to mark.", button:"Start stage 3"}
 ];
 
@@ -18,17 +18,17 @@ const ROUNDS = [
     superseded:[], distractors:["Take out your red exercise book","Stop kicking the chair","Write your name at the top","Turn to the last page"] },
   { clip:"s2_r2", steps:["Grab a blue pen","Underline the verbs in the first paragraph","Swap books with the person on your left"],
     superseded:["Grab a black pen"], distractors:["Underline the nouns in the first paragraph","Give the pen back to Mia","Swap books with the person on your right"] },
-  { clip:"s2_r3", steps:["Put your worksheet in the tray on her desk","Stack your chair","Remind Sam about his permission slip","Take the register back to the office"],
+  { clip:"s2_r3", steps:["Put your worksheet in the tray on his desk","Stack your chair","Remind Sam about his permission slip","Take the register back to the office"],
     superseded:["Put your worksheet in the tray by the door"], distractors:["Sit down","Close the window","Stack all the chairs"] },
-  { clip:"s2_r4", steps:["Take the sports gear out of the cupboard","Count out twenty cones","Put them in the blue bag","Sign the equipment sheet","Meet her on the field at ten past"],
-    superseded:["Count out twelve cones"], distractors:["Put your phone in the box","Put them in the red bag","Meet her in the gym"] }
+  { clip:"s2_r4", steps:["Take the sports gear out of the cupboard","Count out twenty cones","Put them in the blue bag","Sign the equipment sheet","Meet him on the field at ten past"],
+    superseded:["Count out twelve cones"], distractors:["Put your phone in the box","Put them in the red bag","Meet him in the gym"] }
 ];
 const TOTAL_STEPS = ROUNDS.reduce((n, r) => n + r.steps.length, 0);
 
 
 const STAGE_TEXT_SIMPLE = [
   { title:"What did the teacher say?", text:"Your teacher is reading a story, but the class keeps talking. Listen carefully. Questions come after each part.", button:"Start stage 1" },
-  { title:"What did she ask you to do?", text:"Your teacher asks you to do some jobs, but people keep interrupting her. Then tap the jobs in the right order.", button:"Start stage 2" }
+  { title:"What did he ask you to do?", text:"Your teacher asks you to do some jobs, but people keep interrupting him. Then do the jobs yourself, in the right order.", button:"Start stage 2" }
 ];
 const STAGE3_ASSEMBLY = { title:"The longest assembly ever", text:"The principal is talking about the school trip, and the kids near you are not listening. Tap every time you hear one special word, then answer a few questions.", button:"Start stage 3" };
 function stageInfo(i){

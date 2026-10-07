@@ -56,7 +56,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden && !$(
 
 /* hold-to-advance. A quick click works too, so nobody gets stuck. */
 function holdButton(container, label, sub, { onProgress, guard, onBlocked }={}){
-  return new Promise(res => {
+  return new Promise((res, rej) => {
     const C = 207.35;
     container.hidden = false;
     container.innerHTML = `<button class="hold" type="button" aria-label="${esc(label)}. Press and hold, or click."><svg viewBox="0 0 74 74" aria-hidden="true"><circle class="track" cx="37" cy="37" r="33"/><circle class="fill" cx="37" cy="37" r="33" stroke-dasharray="${C}" stroke-dashoffset="${C}"/><circle class="dot" cx="37" cy="37" r="6"/></svg><span class="txt"><b>${esc(label)}</b><small>${esc(sub)}</small></span></button>`;
@@ -65,7 +65,8 @@ function holdButton(container, label, sub, { onProgress, guard, onBlocked }={}){
     const draw = () => { fill.style.strokeDashoffset = (C*(1-p)).toFixed(1); if (onProgress) onProgress(p); };
     const ready = () => !guard || guard();
     const blocked = () => { btn.classList.remove("pressing"); btn.classList.add("blocked"); setTimeout(() => btn.classList.remove("blocked"), 500); if (onBlocked) onBlocked(); };
-    const finish = () => { if (done) return; done = true; p = 1; draw(); btn.classList.remove("pressing"); cleanup(); res(); };
+    const finish = () => { if (done) return; done = true; p = 1; draw(); btn.classList.remove("pressing"); cleanup(); offSkip(); res(); };
+    const offSkip = SKIP.tracking ? onSkip(() => { done = true; cleanup(); rej(new Skipped()); }) : () => {};
     const step = () => {
       if (start === null) { p = Math.max(0, p - 0.05); draw(); if (p > 0) raf = requestAnimationFrame(step); return; }
       p = Math.min(1, (performance.now() - start)/DUR); draw();
@@ -129,22 +130,23 @@ async function titleCard(i){
 
 /* bottom question box: one question at a time */
 function askBox(qs, secondsEach, kicker){
-  return new Promise(async res => {
+  return (async () => {
     const out = [];
     for (let qi = 0; qi < qs.length; qi++) out.push(await askOne(qs[qi], secondsEach, qs.length > 1 ? `${kicker}, question ${qi+1} of ${qs.length}` : kicker));
     $("#box").hidden = true;
-    res(out);
-  });
+    return out;
+  })();
 }
 function askOne(q, seconds, kicker){
-  return new Promise(res => {
+  return new Promise((res, rej) => {
     const box = $("#box"); box.hidden = false;
     const opts = shuffle(q.options);
     box.innerHTML = `<div class="timer"></div><div class="grid"><div><p class="kicker">${esc(kicker)}</p><p class="q">${esc(q.q)}</p></div>
       <div class="opts" role="group" aria-label="Answers">${opts.map((o, i) => `<button type="button" class="opt" aria-pressed="false" data-v="${esc(o)}"><kbd>${i+1}</kbd><span>${esc(o)}</span></button>`).join("")}</div></div>`;
     box.style.animation = "none"; void box.offsetWidth; box.style.animation = "";
     const bar = box.querySelector(".timer"), end = now() + seconds; let done = false;
-    const finish = v => { if (done) return; done = true; ticks.delete(tt); document.removeEventListener("keydown", keys); setTimeout(() => res(v === q.options[0]), v === null ? 0 : 380); };
+    const finish = v => { if (done) return; done = true; offSkip(); ticks.delete(tt); document.removeEventListener("keydown", keys); setTimeout(() => res(v === q.options[0]), v === null ? 0 : 380); };
+    const offSkip = onSkip(() => { done = true; ticks.delete(tt); document.removeEventListener("keydown", keys); box.hidden = true; rej(new Skipped()); });
     const tt = t => { const left = Math.max(0, end - t); bar.style.width = (left/seconds*100) + "%"; if (left <= 0 && !paused) finish(null); };
     ticks.add(tt);
     const choose = btn => { if (done || paused) return; tick(); box.querySelectorAll(".opt").forEach(o => o.setAttribute("aria-pressed", o === btn ? "true" : "false")); finish(btn.dataset.v); };
@@ -172,11 +174,17 @@ function chatterBehaviour(room, kids, { words=true }={}){
     }
   };
 }
-function speakerBehaviour(fig){ return (t, v) => { fig.userData.talkTarget = Math.min(1, v*9); }; }
+function speakerBehaviour(fig){ return (t, v) => { fig.userData.talkTarget = Math.min(1, v*9); fig.userData.level = v; }; }
+function quiet(fig){ if (fig && fig.userData) { fig.userData.talkTarget = 0; fig.userData.level = 0; } }
 
+async function roomReady(roomName){
+  if (!W3.ok) return;
+  try { await roomAssets(roomName); } catch(e) { console.error(e); showFatal("A 3D room couldn't load. Check your connection and try again."); throw e; }
+  ensureRoom(roomName);
+}
 async function flyInto(roomName, viewName){
   if (!W3.ok) { setFlatScene(roomName === "lecture" ? "lecture" : (viewName === "desk" ? "desk" : "classroom")); await wait(0.3); return; }
-  ensureRoom(roomName);
+  await roomReady(roomName);
   $("#flash").classList.add("on"); await wait(0.45);
   setRoom(roomName); const r = W3.rooms[roomName];
   setView(r.views.fly, true); setView(r.views[viewName]);
@@ -185,9 +193,10 @@ async function flyInto(roomName, viewName){
 
 /* STAGE 1 */
 async function stage1(){
+  await roomReady("classroom");
   const room = ensureRoom("classroom") || W3.rooms.classroom;
-  room.kids.forEach(k => { setFigColor(k, RED); k.userData.standTarget = 0; k.userData.stand = 0; });
-  room.teacher.position.set(0.4, 0, -4.7); room.teacher.rotation.y = 0; room.teacher.userData.holdBook = true; if (room.teacher.userData.book) room.teacher.userData.book.visible = true;
+  room.kids.forEach(k => { k.userData.standTarget = 0; k.userData.stand = 0; });
+  room.teacher.position.set(room.spots.home.x, room.spots.home.y, room.spots.home.z);
   await flyInto("classroom", "back");
   const bed = play("chatter", { bus:"noise", gain:0.45, loop:true });
   const chat = chatterBehaviour(room, room.kids), speak = speakerBehaviour(room.teacher);
@@ -217,18 +226,18 @@ async function stage1(){
     results.push(...await askBox(qs[i], CFG.qTime, `Part ${i+1} of 3`));
   }
   bed.stop(1.2); await wait(1.2);
-  ticks.delete(chat); ticks.delete(speak); room.kids.forEach(k => { k.userData.talkTarget = 0; k.userData.turnTarget = 0; });
+  ticks.delete(chat); ticks.delete(speak); quiet(room.teacher); room.kids.forEach(k => { k.userData.talkTarget = 0; k.userData.turnTarget = 0; });
   unlisten();
   state.s1 = { correct: results.filter(Boolean).length, total: results.length };
 }
 
 /* STAGE 2 */
 function pickSteps(round, seconds, n, of){
-  return new Promise(res => {
+  return new Promise((res, rej) => {
     const box = $("#box"); box.hidden = false;
     const tiles = shuffle([...round.steps, ...round.superseded, ...round.distractors]), chosen = [];
     const t0 = now();
-    box.innerHTML = `<div class="timer"></div><p class="kicker">Instructions ${n} of ${of}, ${round.steps.length} steps</p><p class="q">What did she ask you to do? Tap the steps in order.</p>
+    box.innerHTML = `<div class="timer"></div><p class="kicker">Instructions ${n} of ${of}, ${round.steps.length} steps</p><p class="q">What did he ask you to do? Tap the steps in order.</p>
       <ol class="steps-chosen" aria-label="Your steps"></ol><div class="tiles">${tiles.map((t, i) => `<button type="button" class="tile" data-i="${i}">${esc(t)}</button>`).join("")}</div>
       <div class="box-actions"><button type="button" class="btn ghost" data-act="clear">Clear</button><button type="button" class="btn" data-act="done" disabled>Done</button></div>`;
     const list = box.querySelector(".steps-chosen"), doneBtn = box.querySelector('[data-act="done"]');
@@ -240,7 +249,8 @@ function pickSteps(round, seconds, n, of){
     };
     render();
     const bar = box.querySelector(".timer"), end = now() + seconds; let done = false;
-    const finish = () => { if (done) return; done = true; ticks.delete(tt); box.hidden = true; res({ chosen: chosen.map(i => tiles[i]), seconds: +(now() - t0).toFixed(1) }); };
+    const finish = () => { if (done) return; done = true; offSkip(); ticks.delete(tt); box.hidden = true; res({ chosen: chosen.map(i => tiles[i]), seconds: +(now() - t0).toFixed(1) }); };
+    const offSkip = onSkip(() => { done = true; ticks.delete(tt); box.hidden = true; rej(new Skipped()); });
     const tt = t => { const left = Math.max(0, end - t); bar.style.width = (left/seconds*100) + "%"; if (left <= 0) finish(); };
     ticks.add(tt);
     box.querySelectorAll(".tile").forEach(b => b.addEventListener("click", () => { if (!done && !paused) { tick(); chosen.push(+b.dataset.i); render(); } }));
@@ -249,6 +259,12 @@ function pickSteps(round, seconds, n, of){
     const firstTile = box.querySelector(".tile"); if (firstTile) firstTile.focus({ preventScroll:true });
   });
 }
+/* Stage 2 in 3D: you sit at your desk, look around and actually do what the teacher asked.
+   Every thing you can use maps to one of the round's step texts, so scoring is unchanged. */
+let taskCleanup = null;
+function endTaskMode(){ if (taskCleanup) { const f = taskCleanup; taskCleanup = null; f(); } }
+function headWorldOf(p){ const v = new THREE.Vector3(); p.getWorldPosition(v); v.y += 0.3; return v; }
+
 function longestRun(idx){          // longest run of steps kept in the right relative order
   const tails = [];
   for (const v of idx) { let lo = 0, hi = tails.length; while (lo < hi) { const m = (lo+hi) >> 1; if (tails[m] < v) lo = m+1; else hi = m; } tails[lo] = v; }
@@ -277,8 +293,9 @@ async function walkTo(fig, to, secs){
 async function stage2(){
   await A.decodeGroup("s2");
   A.freeGroup("boot");
+  await roomReady("classroom");
   const room = ensureRoom("classroom") || W3.rooms.classroom;
-  const named = {}; room.kids.forEach(k => { if (k.userData.name) named[k.userData.name] = k; setFigColor(k, k.userData.name ? RED : GREY); });
+  const named = {}; room.kids.forEach(k => { if (k.userData.name) named[k.userData.name] = k; });
   await flyInto("classroom", "back");
   const bed = play("chatter", { bus:"noise", gain:0.26, loop:true });
   const speak = speakerBehaviour(room.teacher); ticks.add(speak);
@@ -301,37 +318,45 @@ async function stage2(){
   ticks.add(events);
   await titleCard(1);
   listen("Your teacher is walking over");
-  walkTo(room.teacher, V(0.05, 0, -3.6), 0.9).then(() => walkTo(room.teacher, V(0.05, 0, 1.2), 2.6)).then(() => { room.teacher.rotation.y = 0; });
-  setView(room.views.desk);
+  walkTo(room.teacher, V(1.0, 0, 2.6), 1.0).then(() => walkTo(room.teacher, room.spots.desk, 2.6));
+  const in3D = W3.ok && room.props && room.seat;
+  if (in3D) { resetWork(); const B = room.byId || {}; if (B.paper) B.paper.visible = CFG.story === "simple"; if (B.worksheet) B.worksheet.visible = CFG.story !== "simple";
+    if (room.rightKid) room.rightKid.visible = true; startFreeLook(room.seat); onSkip(() => { stopFreeLook(); if (room.rightKid) room.rightKid.visible = false; }); }
+  else setView(room.views.desk);
   if (!W3.ok) setFlatScene("desk");
   await wait(2.2);
   await play("s2_intro").ended;
-  const useRounds = roundsFor(CFG), seconds = CFG.stepTime, rounds = [];
+  const useRounds = roundsFor(CFG), seconds = CFG.stepTime, rounds = []; let lastWork = null;
   let span = 0;
   for (let r=0;r<useRounds.length;r++){
     listen(`Instructions ${r+1} of ${useRounds.length}: listen to your teacher`);
     await wait(0.6);
     const h = play(useRounds[r].clip); clipStart = h.startAt; pending = (META.kids[useRounds[r].clip] || []).slice();
     await h.ended; unlisten();
-    const { chosen, seconds: took } = await pickSteps(useRounds[r], seconds[r], r+1, useRounds.length);
+    if (in3D) { W3.free.tyaw = 0; W3.free.tpitch = room.seat.pitch; }
+    const { chosen, seconds: took, work } = in3D ? await doTasks(useRounds[r], seconds[r] + 30 + 15*useRounds[r].steps.length, r+1, useRounds.length)
+                                          : await pickSteps(useRounds[r], seconds[r], r+1, useRounds.length);
     const sr = scoreRound(useRounds[r], chosen, took);
-    rounds.push(sr);
+    rounds.push(sr); if (work) lastWork = work;
     if (sr.passed) span = useRounds[r].steps.length;
   }
   bed.stop(1); await wait(1.1);
-  ticks.delete(speak); ticks.delete(events); unlisten();
-  room.teacher.position.set(0.4, 0, -4.7); room.teacher.rotation.y = 0;
+  if (in3D) { stopFreeLook(); if (room.rightKid) room.rightKid.visible = false; }
+  ticks.delete(speak); ticks.delete(events); unlisten(); quiet(room.teacher);
+  room.teacher.position.set(room.spots.home.x, room.spots.home.y, room.spots.home.z);
   const sum = key => rounds.reduce((n, r) => n + r[key], 0);
   state.s2 = { correct: sum("inPosition"), total: useRounds.reduce((n, r) => n + r.steps.length, 0), span, anyOrder: sum("anyOrder"),
     omissions: sum("omissions"), updateErrors: sum("updateErrors"), intrusions: sum("intrusions"), orderErrors: sum("orderErrors"),
-    rounds };
+    rounds, work:lastWork };
 }
 
 /* STAGE 3 */
 async function stage3(){
   await A.decodeGroup("s3");
   A.freeGroup("s2");
+  await roomReady("lecture");
   const room = ensureRoom("lecture") || W3.rooms.lecture;
+  room.donkey.visible = true;
   await flyInto("lecture", innerWidth <= 820 ? "seatSmall" : "seat");   // on phones, keep the distractions above the notes panel
   const speak = speakerBehaviour(room.lecturer); ticks.add(speak);
   room.gamer.userData.turnTarget = 0; if (room.gamer.userData.headPivot) room.gamer.userData.headPivot.rotation.x = 0.3;
@@ -376,10 +401,10 @@ async function stage3(){
   };
   ticks.add(gossipTick);
   await lecture.ended;
-  gossip.stop(0.3); GAME.live = false; ticks.delete(gossipTick); ticks.delete(speak);
+  gossip.stop(0.3); GAME.live = false; ticks.delete(gossipTick); ticks.delete(speak); quiet(room.lecturer);
   const notesText = area.value; area.readOnly = true;
 
-  const summaryText = await new Promise(res => {
+  const summaryText = await new Promise((res, rej) => {
     const box = $("#box"), seconds = CFG.summary || 40; box.hidden = false; notes.hidden = true;
     box.innerHTML = `<div class="timer"></div><p class="kicker">${seconds} seconds</p><p class="q">Sum up the lecture in one or two sentences</p>
       <textarea id="summaryArea" rows="2" spellcheck="false" aria-label="Your summary" style="margin-top:.8rem"></textarea>
@@ -387,7 +412,8 @@ async function stage3(){
       <div class="box-actions"><button type="button" class="btn" id="submitSummary">Submit notes</button></div>`;
     const ta = $("#summaryArea"); if (ta) ta.focus({ preventScroll:true });
     const bar = box.querySelector(".timer"), end = now() + seconds; let done = false;
-    const finish = () => { if (done) return; done = true; ticks.delete(tt); box.hidden = true; res(ta.value); };
+    const finish = () => { if (done) return; done = true; offSkip(); ticks.delete(tt); box.hidden = true; res(ta.value); };
+    const offSkip = onSkip(() => { done = true; ticks.delete(tt); box.hidden = true; rej(new Skipped()); });
     const tt = t => { const left = Math.max(0, end - t); bar.style.width = (left/seconds*100) + "%"; if (left <= 0) finish(); };
     ticks.add(tt); $("#submitSummary").addEventListener("click", finish);
   });
@@ -406,7 +432,9 @@ async function stage3(){
 async function stage3Assembly(){
   await A.decodeGroup("s3");
   A.freeGroup("s2");
+  await roomReady("lecture");
   const room = ensureRoom("lecture") || W3.rooms.lecture;
+  room.donkey.visible = true;
   setScreen("School assembly", "Friday: the trip");
   await flyInto("lecture", innerWidth <= 820 ? "seatSmall" : "seat");
   const speak = speakerBehaviour(room.lecturer); ticks.add(speak);
@@ -442,6 +470,7 @@ async function stage3Assembly(){
   btn.addEventListener("click", tapNow);
   const keyTap = e => { if (e.code === "Space") { e.preventDefault(); tapNow(); } };
   document.addEventListener("keydown", keyTap);
+  onSkip(() => document.removeEventListener("keydown", keyTap));
   let pending = META.assembly_whispers.slice(), wi = 0;
   const whisperTick = t => {
     const el = t - when;
@@ -454,7 +483,7 @@ async function stage3Assembly(){
   };
   ticks.add(whisperTick);
   await speech.ended;
-  whispers.stop(0.3); GAME.live = false; ticks.delete(whisperTick); ticks.delete(speak); ticks.delete(gamerLoop);
+  whispers.stop(0.3); GAME.live = false; ticks.delete(whisperTick); ticks.delete(speak); ticks.delete(gamerLoop); quiet(room.lecturer);
   document.removeEventListener("keydown", keyTap);
   box.hidden = true;
   const answers = await askBox(ASSEMBLY.questions, CFG.aqTime, "About the assembly");
@@ -536,19 +565,22 @@ function instructionDetail(){
 }
 function instructionErrors(){
   const d = state.s2, bits = [];
-  if (d.updateErrors) bits.push(`<li>Took the instruction she overruled ${d.updateErrors === 1 ? "once" : d.updateErrors + " times"}</li>`);
+  const hands = typeof workDetail === "function" ? workDetail(d.work) : "";
+  if (d.updateErrors) bits.push(`<li>Took the instruction he overruled ${d.updateErrors === 1 ? "once" : d.updateErrors + " times"}</li>`);
   if (d.intrusions) bits.push(`<li>Picked up ${d.intrusions === 1 ? "one thing" : d.intrusions + " things"} said to someone else</li>`);
   if (d.omissions) bits.push(`<li>Missed ${d.omissions} step${d.omissions === 1 ? "" : "s"}</li>`);
   if (d.orderErrors) bits.push(`<li>Remembered ${d.orderErrors} step${d.orderErrors === 1 ? "" : "s"} out of order</li>`);
-  return bits.length ? `<ul>${bits.join("")}</ul>` : "";
+  return (bits.length ? `<ul>${bits.join("")}</ul>` : "") + hands;
 }
 function showResults(){
   hud({ name:"Your results", pause:false });
   const who = (state.player && state.player.name) ? state.player.name : null;
-  const s1 = Math.round(state.s1.correct/state.s1.total*100), s2 = Math.round(state.s2.correct/state.s2.total*100);
+  const s1 = state.s1.skipped ? null : Math.round(state.s1.correct/state.s1.total*100);
+  const s2 = state.s2.skipped ? null : Math.round(state.s2.correct/state.s2.total*100);
   const a = state.s3;
-  let s3, staminaDetail, staminaExtra = "", staminaKey, tail;
-  if (a.mode === "assembly") {
+  let s3, staminaDetail, staminaExtra = "", staminaKey = CFG.stage3 === "assembly" ? "assembly" : "stamina", tail = "Some stages were skipped, so this score only covers the ones you played.";
+  if (a.skipped) { s3 = null; staminaDetail = ""; }
+  else if (a.mode === "assembly") {
     const tapShare = a.targets ? a.hits/a.targets : 0, qShare = a.questions ? a.correct/a.questions : 0;
     s3 = Math.max(0, Math.min(100, Math.round((tapShare*0.6 + qShare*0.4)*100 - Math.min(20, a.falseAlarms*4))));
     staminaKey = "assembly";
@@ -573,16 +605,22 @@ function showResults(){
       : s3 >= 60 ? "The donkey drama passed you right by."
       : "Jess found hay in Tyler's car, in case you were wondering.";
   }
-  const overall = Math.round((s1 + s2 + s3)/3);
-  const row = (name, score, key, detail, extra="") => `<div class="rrow"><div class="head"><h3>${name}</h3><span class="val">${score}</span></div><div class="rbar"><span style="width:${score}%"></span></div>
+  const played = [s1, s2, s3].filter(v => v !== null);
+  const overall = played.length ? Math.round(played.reduce((x, y) => x + y, 0)/played.length) : "–";
+  if (played.length < 3 && played.length) tail = "You skipped a stage, so this score only covers the stages you played.";
+  if (!played.length) tail = "You skipped every stage. Play one to get a score.";
+  const row = (name, score, key, detail, extra="") => score === null
+    ? `<div class="rrow skipped"><div class="head"><h3>${name}</h3><span class="val">Skipped</span></div><p class="fine">Not counted in your score.</p></div>`
+    : `<div class="rrow"><div class="head"><h3>${name}</h3><span class="val">${score}</span></div><div class="rbar"><span style="width:${score}%"></span></div>
     <p><b>${BANDS[bandIdx(score)]}.</b> ${BLURBS[key][bandIdx(score)]}</p><p class="fine">${detail}</p>${extra}</div>`;
   const el = $("#results");
   el.innerHTML = `<div><h2 tabindex="-1" id="resultsHead">${who ? esc(who) + ", your focus score" : "Your focus score"}</h2><div class="big">${overall}</div>
     <div class="of">out of 100${state.player ? `, for ${esc(state.player.band)}` : ""}</div><p class="donkey">${esc(tail)}</p></div>
-    <div>${row("Noise filter", s1, "noise", `Story questions: ${state.s1.correct} of ${state.s1.total} right`)}
-    ${row("Instruction tracking", s2, "instr", instructionDetail(), instructionErrors())}
+    <div>${row("Noise filter", s1, "noise", s1 === null ? "" : `Story questions: ${state.s1.correct} of ${state.s1.total} right`)}
+    ${row("Instruction tracking", s2, "instr", s2 === null ? "" : instructionDetail(), s2 === null ? "" : instructionErrors())}
     ${row("Focus stamina", s3, staminaKey, staminaDetail, staminaExtra)}
     <p class="fine" style="margin-top:1rem">This is a game, not an ADHD test. If focus gets in the way of everyday life, talk to your GP.</p>
+    <p class="fine">3D models: Classroom Asset Pack by Styloo; "Lecture hall" by malkaviana and "Voxel Animals Collection" by Ay23man, both CC BY 4.0 (Sketchfab).</p>
     <div style="margin-top:1.2rem"><button class="btn" id="againBtn" type="button">Play again</button></div></div>`;
   el.hidden = false; const rh = $("#resultsHead"); if (rh) rh.focus();
   $("#againBtn").addEventListener("click", () => { el.hidden = true; run(); });
@@ -599,11 +637,31 @@ function showFatal(msg){
   $("#loader").hidden = true;
 }
 addEventListener("error", e => showFatal(e && e.message ? e.message : ""));
-addEventListener("unhandledrejection", e => showFatal(e && e.reason ? String(e.reason).slice(0, 200) : ""));
+addEventListener("unhandledrejection", e => { if (e && e.reason instanceof Skipped) { e.preventDefault(); return; } showFatal(e && e.reason ? String(e.reason).slice(0, 200) : ""); });
 
 /* boot */
 function localStorage_get(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }
 function localStorage_set(k, v){ try { localStorage.setItem(k, v); } catch(e) {} }
+
+/* each stage runs until it finishes or the player presses Skip stage */
+async function runStage(key, fn){
+  beginStage();
+  $("#skipBtn").hidden = false; $("#skipBtn").disabled = false;
+  try { await fn(); }
+  catch(e) {
+    if (!(e instanceof Skipped)) throw e;
+    state[key] = { skipped:true };
+    ["#box", "#notes", "#title", "#taskpanel", "#actmenu"].forEach(sel => { const el = $(sel); if (el) { el.hidden = true; } });
+    const t = $("#title"); if (t) t.innerHTML = "";
+    unlisten(); labels.innerHTML = ""; GAME.live = false;
+    if (typeof endTaskMode === "function") endTaskMode();
+    if (W3.rooms.classroom) { const r = W3.rooms.classroom; quiet(r.teacher); r.kids.forEach(k => { k.userData.talkTarget = 0; k.userData.turnTarget = 0; }); }
+    if (W3.rooms.lecture) quiet(W3.rooms.lecture.lecturer);
+    $("#flash").classList.add("on"); await new Promise(r => setTimeout(r, 350)); $("#flash").classList.remove("on");
+  }
+  finally { endStage(); }
+}
+$("#skipBtn").addEventListener("click", () => { if (paused) setPaused(false); $("#skipBtn").disabled = true; skipStage(); });
 
 async function run(){
   await A.decodeGroup("boot");
@@ -611,9 +669,10 @@ async function run(){
   for (const k of Object.keys(state)) delete state[k];
   state.player = player;
   GAME.score = 0;
-  await stage1();
-  await stage2();
-  await (CFG.stage3 === "assembly" ? stage3Assembly() : stage3());
+  await runStage("s1", stage1);
+  await runStage("s2", stage2);
+  await runStage("s3", CFG.stage3 === "assembly" ? stage3Assembly : stage3);
+  $("#skipBtn").hidden = true;
   showResults();
 }
 
@@ -623,13 +682,11 @@ function wants3D(){
   if (q.get("lite") === "1" || localStorage_get("attune-lite") === "1") return false;
   return true;                                  // 3D everywhere, phones included
 }
-function loadThree(){
+function loadThree(){                      // three.js arrives as ES modules via js/three-boot.js
   return new Promise(res => {
-    const s = document.createElement("script");
-    s.src = "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js";
-    s.onload = () => res(true); s.onerror = () => res(false);
-    document.head.appendChild(s);
-    setTimeout(() => res(!!window.THREE), 6000);
+    if (window.THREE) return res(true);
+    addEventListener("three-ready", () => res(true), { once:true });
+    setTimeout(() => res(!!window.THREE), 12000);
   });
 }
 (async function boot(){
@@ -637,23 +694,30 @@ function loadThree(){
   log("scripts running");
   let threeReady = false;
   if (wants3D()) { threeReady = await loadThree(); log("3D library " + (threeReady ? "loaded" : "unavailable")); }
-  if (W3.ok) { setRoom("classroom"); setView(W3.rooms.classroom.views.fly, true); setView({ pos:V(0, 3.2, 7), look:V(0, 1.2, -3) }); }
   let introTick = null;
-  const startPreview = () => {
+  let modelP = 0, audioP = 0;
+  const bar = $("#loadBar");
+  const showProgress = () => { bar.style.width = ((threeReady ? (audioP*0.45 + modelP*0.55) : audioP)*100).toFixed(0) + "%"; };
+  const startPreview = async () => {
     if (!threeReady || !init3D()) { setFlatScene("intro"); const fl = document.querySelector(".flat"); if (fl) fl.classList.add("alive", "soft"); return false; }
+    W3.onModelProgress = (name, p) => { if (name === "classroom") { modelP = Math.max(modelP, p*0.95); showProgress(); } };
+    try { await roomAssets("classroom"); } catch(e) { console.error(e); return false; }
+    modelP = 1; showProgress();
     const room = ensureRoom("classroom"); setRoom("classroom");
-    setView({ pos:V(-0.9, 1.42, 2.2), look:V(0.8, 1.4, -4.7) }, true);
-    setView({ pos:V(1.2, 1.3, 3.2), look:V(-0.7, 1.45, -4.7) });      // slow drift across the room
-    let flip = 0;
+    document.body.classList.add("has-room");
+    setView({ pos:V(-0.5, 1.45, -4.45), look:V(0.3, 1.4, 4.8) }, true);
+    setView({ pos:V(0.7, 1.42, -4.45), look:V(-0.1, 1.4, 4.8) });      // slow drift along the back of the room
+    let flip = 0, side = 1;
     introTick = t => {
       room.kids.forEach((k, i) => { k.userData.talkTarget = Math.sin(t*1.7 + i) > 0.2 ? 0.85 : 0; k.userData.turnTarget = Math.sin(t*0.55 + i*1.3)*0.7; });
-      room.teacher.userData.talkTarget = 0.7 + Math.sin(t*3)*0.25;
-      if (t > flip + 9) { flip = t; const a = W3.camPos.clone(); setView({ pos:W3.camLook.clone().setY(1.36).setZ(a.z), look:V(-a.x, 1.42, -4.7) }); }
+      room.teacher.userData.talkTarget = 0.5 + Math.sin(t*3)*0.25; room.teacher.userData.level = Math.sin(t*2.1) > -0.3 ? 0.05 : 0;
+      if (t > flip + 9) { flip = t; side = -side; setView({ pos:V(side > 0 ? 0.7 : -0.5, 1.42 + Math.random()*0.08, -4.45), look:V(side > 0 ? -0.1 : 0.3, 1.4, 4.8) }); }
     };
     ticks.add(introTick);
+    loadGLB("lecture").catch(() => {});        // fetch the lecture hall in the background
     return true;
   };
-  const previewOn = startPreview();
+  const previewP = startPreview();
   // the soft keyboard is what used to kill phones: park the renderer while a field is focused
   ["#playerName", "#playerAge"].forEach(sel => {
     const el = $(sel);
@@ -661,9 +725,8 @@ function loadThree(){
     el.addEventListener("blur", () => { setTimeout(() => { if (document.activeElement !== $("#playerName") && document.activeElement !== $("#playerAge")) W3.hold = false; }, 200); });
   });
   document.addEventListener("visibilitychange", () => { W3.hold = document.hidden; });
-  const bar = $("#loadBar");
   try {
-    A.onProgress = p => { bar.style.width = (p*100).toFixed(0) + "%"; };
+    A.onProgress = p => { audioP = p; showProgress(); };
     log("loading audio…");
     await initAudio();
     log("audio ready (" + Object.keys(A.buffers).length + " clips)");
@@ -672,6 +735,7 @@ function loadThree(){
     $("#enterWrap").innerHTML = `<p class="err">Sound couldn't load here: ${esc(String(e && e.message || e))}</p>`;
     return;
   }
+  const previewOn = await previewP;
   bar.style.width = "100%";
   if (!threeReady) $("#enterWrap").insertAdjacentHTML("beforebegin", `<p class="lite-note">Running without the 3D rooms on this device.</p>`);
   const nameEl = $("#playerName"), ageEl = $("#playerAge"), note = $("#bandNote");
@@ -702,6 +766,7 @@ function loadThree(){
   goFullscreen();
   $("#enterWrap").innerHTML = "";
   if (introTick) { ticks.delete(introTick); introTick = null; }
+  if (W3.rooms.classroom) { quiet(W3.rooms.classroom.teacher); W3.rooms.classroom.kids.forEach(k => { k.userData.talkTarget = 0; k.userData.turnTarget = 0; }); }
   W3.hold = false;
   $("#labels").innerHTML = "";
   const has3D = previewOn || (threeReady ? init3D() : false);

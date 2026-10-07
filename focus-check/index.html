@@ -6,9 +6,14 @@
 <title>ATTune Focus Check</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Nunito:wght@500;700;800;900&family=Patrick+Hand&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
-
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/"
+} }
+</script>
 </head>
 <body>
 
@@ -22,6 +27,7 @@
   <div class="hud-actions">
     <button class="chip" id="fsBtn" type="button">Full screen</button>
     <button class="chip" id="pauseBtn" type="button" hidden>Pause</button>
+    <button class="chip skip" id="skipBtn" type="button" hidden>Skip stage</button>
   </div>
 </header>
 
@@ -29,18 +35,25 @@
 <section class="box" id="box" hidden aria-live="polite"></section>
 <section class="notes" id="notes" hidden></section>
 <section class="title" id="title" hidden></section>
+<section class="taskpanel" id="taskpanel" hidden aria-live="polite"></section>
+<div class="actmenu" id="actmenu" hidden role="menu"></div>
+<div class="proptip" id="proptip" hidden></div>
+<section class="work" id="work" hidden aria-live="polite"></section>
 
 <section class="loader" id="loader">
-  <h1>Are you actually listening?</h1>
-  <p>Three rooms, about five minutes. Everything red wants your attention. Your job is to listen anyway.</p>
-  <div class="bar"><span id="loadBar"></span></div>
-  <div class="fields">
-    <label for="playerName">First name<input id="playerName" type="text" maxlength="24" autocomplete="given-name" placeholder="Sam"></label>
-    <label for="playerAge">Age<input id="playerAge" type="number" min="5" max="99" inputmode="numeric" placeholder="14"></label>
+  <div class="loader-card">
+    <p class="eyebrow">ATTune Focus Check</p>
+    <h1>Are you actually listening?</h1>
+    <p>Three rooms, about five minutes. Everyone around you wants your attention. Your job is to listen anyway.</p>
+    <div class="bar"><span id="loadBar"></span></div>
+    <div class="fields">
+      <label for="playerName">First name<input id="playerName" type="text" maxlength="24" autocomplete="given-name" placeholder="Sam"></label>
+      <label for="playerAge">Age<input id="playerAge" type="number" min="5" max="99" inputmode="numeric" placeholder="14"></label>
+    </div>
+    <p class="band-note" id="bandNote">Type an age and the game sets itself for that age group.</p>
+    <div id="enterWrap"></div>
+    <p class="fine">Headphones on. Some sounds come from your left or right. At the end, AI marks your lecture notes and you'll be asked to allow it. This is a game, not a diagnosis.</p>
   </div>
-  <p class="band-note" id="bandNote">Type an age and the game sets itself for that age group.</p>
-  <div id="enterWrap"></div>
-  <p class="fine">Headphones on. Some sounds come from your left or right. At the end, AI marks your lecture notes and you'll be asked to allow it. This is a game, not a diagnosis.</p>
 </section>
 
 <section class="results" id="results" hidden></section>
@@ -57,5 +70,7 @@
 <script src="js/audio.js"></script>
 <script src="js/scene.js"></script>
 <script src="js/flow.js"></script>
+<script src="js/tasks.js"></script>
+<script type="module" src="js/three-boot.js"></script>
 </body>
 </html>

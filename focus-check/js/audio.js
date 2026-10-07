@@ -14,6 +14,21 @@ const A = { live:new Set(), ctx:null, buffers:{}, loading:null, master:null, voi
 let paused = false;
 const ticks = new Set();
 
+/* Skip stage: anything the current stage is waiting on rejects with Skipped, and the stage's ticks are removed. */
+class Skipped extends Error { constructor(){ super("skipped"); this.name = "Skipped"; } }
+const SKIP = { listeners:new Set(), stageTicks:new Set(), tracking:false };
+function onSkip(fn){ SKIP.listeners.add(fn); return () => SKIP.listeners.delete(fn); }
+const _ticksAdd = ticks.add.bind(ticks);
+ticks.add = f => { if (SKIP.tracking) SKIP.stageTicks.add(f); return _ticksAdd(f); };
+function beginStage(){ SKIP.tracking = true; SKIP.stageTicks.clear(); SKIP.listeners.clear(); }
+function endStage(){ SKIP.tracking = false; SKIP.stageTicks.clear(); SKIP.listeners.clear(); }
+function skipStage(){
+  const ls = [...SKIP.listeners]; SKIP.listeners.clear();
+  SKIP.stageTicks.forEach(f => ticks.delete(f)); SKIP.stageTicks.clear();
+  if (typeof stopAllAudio === "function") stopAllAudio();
+  ls.forEach(f => { try { f(); } catch(e){} });
+}
+
 function now(){ return A.ctx ? A.ctx.currentTime : performance.now()/1000; }
 
 function b64ToBuf(b64){
@@ -69,7 +84,8 @@ function play(name, {bus="voice", gain=1, loop=false, when=null}={}){
   src.start(startAt);
   const h = { src, g, startAt, stopped:false };
   A.live.add(h); src.addEventListener("ended", () => A.live.delete(h));
-  h.ended = new Promise(r => { src.onended = () => r(); });
+  h.ended = new Promise((r, j) => { const off = onSkip(() => j(new Skipped())); src.onended = () => { off(); r(); }; });
+  h.ended.catch(() => {});
   h.stop = (fade=0.4) => {
     if (h.stopped) return; h.stopped = true;
     const t = c.currentTime;
@@ -93,9 +109,10 @@ function level(an){
   return Math.sqrt(s / A.data.length);
 }
 function wait(sec){
-  return new Promise(res => {
+  return new Promise((res, rej) => {
     const end = now() + sec;
-    const f = t => { if (t >= end) { ticks.delete(f); res(); } };
+    const off = onSkip(() => { ticks.delete(f); rej(new Skipped()); });
+    const f = t => { if (t >= end) { ticks.delete(f); off(); res(); } };
     ticks.add(f);
   });
 }
