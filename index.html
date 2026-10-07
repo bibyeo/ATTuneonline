@@ -167,7 +167,7 @@
     </svg>
     <img id="logo" src="assets/logo_symbol.png" alt="Attune" draggable="false">
     <a class="kbd-link" id="kA" href="#attention-test">Attention Test</a>
-    <a class="kbd-link" id="kB" href="#more-info">More Info</a>
+    <a class="kbd-link" id="kB" href="mall/">Play the Game</a>
   </div>
 
   <header>
@@ -408,12 +408,12 @@
 
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script src="toys3d.js"></script>
+<script src="toys3d.js?v=20261008b"></script>
 <script src="site.js"></script>
 <script>
 /* Where the brooches go. Replace '' with real URLs when the pages exist. */
-const LINKS = { attention: '/focus-check/', info: '#mission' };
-const BROOCH = { plaqueA: ['attention', 'Attention Test'], plaqueB: ['info', 'More Info'] };
+const LINKS = { attention: '/focus-check/', play: '/mall/' };
+const BROOCH = { plaqueA: ['attention', 'Attention Test'], plaqueB: ['play', 'Play the Game'] };
 
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const root = document.getElementById('root'), stage = document.getElementById('stage');
