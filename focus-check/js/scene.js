@@ -41,7 +41,11 @@ function init3D(){
       r.setSize(innerWidth, innerHeight); W3.camera.aspect = innerWidth/innerHeight; W3.camera.updateProjectionMatrix();
       if (W3.composer) { W3.composer.setSize(innerWidth, innerHeight); W3.grade.uniforms.res.value.set(innerWidth, innerHeight); }
     });
-    addEventListener("pointermove", e => { W3.mouse.x = (e.clientX/innerWidth)*2 - 1; W3.mouse.y = (e.clientY/innerHeight)*2 - 1; });
+    addEventListener("pointermove", e => {
+      W3.mouse.x = (e.clientX/innerWidth)*2 - 1; W3.mouse.y = (e.clientY/innerHeight)*2 - 1;
+      const F = W3.free;                                  // free look: the view follows the cursor, except while it is over a panel or button
+      if (F && !(e.target && e.target.closest && e.target.closest(".taskpanel, .actmenu, .hud, .veil, .results, .work, .box, .notes, .title"))) { F.lx = W3.mouse.x; F.ly = W3.mouse.y; }
+    });
     W3.ok = true;
     W3.builders = { classroom: buildClassroom, lecture: buildLecture };
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => (W3.texts || []).forEach(redrawTex));
@@ -679,8 +683,11 @@ function render3D(t){
   const nowMs = performance.now(), dt = Math.min(0.25, (nowMs - (W3.lastMs || nowMs))/1000); W3.lastMs = nowMs;
   if (W3.free) {                    // stage 2: you sit at your desk and look around freely
     const F = W3.free;
-    const k = 1 - Math.exp(-dt*(nowMs - (F.snap || 0) < 150 ? 40 : 8));   // while dragging, keep up with the cursor
-    F.yaw += (F.tyaw - F.yaw)*k; F.pitch += (F.tpitch - F.pitch)*k;
+    // where you are facing is the base direction (arrow keys and Turn around move it) plus wherever the cursor points:
+    // cursor right = look right, cursor up = look up, cursor in the middle = straight ahead
+    const goalYaw = F.tyaw - F.lx*1.0, goalPitch = Math.max(-1.15, Math.min(0.7, F.tpitch - F.ly*0.5));
+    const k = 1 - Math.exp(-dt*10);
+    F.yaw += (goalYaw - F.yaw)*k; F.pitch += (goalPitch - F.pitch)*k;
     const back = Math.max(0, -Math.cos(F.yaw));          // turned round: stand up and step into the aisle so the back of the room is in view
     if (!F.tp) F.tp = V(0,0,0);
     F.tp.copy(F.pos); if (F.backOff) F.tp.addScaledVector(F.backOff, back);
@@ -704,7 +711,7 @@ function render3D(t){
 function startFreeLook(seat){
   if (!W3.ok || !seat) return;
   const d = V(0,0,0).copy(W3.curLook).sub(W3.curPos).normalize();
-  W3.free = { pos:seat.pos.clone(), backOff:seat.backOff ? seat.backOff.clone() : null, yaw:Math.atan2(d.x, d.z), pitch:Math.asin(Math.max(-1, Math.min(1, d.y))), tyaw:seat.yaw, tpitch:seat.pitch };
+  W3.free = { pos:seat.pos.clone(), backOff:seat.backOff ? seat.backOff.clone() : null, yaw:Math.atan2(d.x, d.z), pitch:Math.asin(Math.max(-1, Math.min(1, d.y))), tyaw:seat.yaw, tpitch:seat.pitch, lx:W3.mouse.x, ly:W3.mouse.y };
   W3.fovTarget = 62;
 }
 function stopFreeLook(){ if (!W3.free) return; W3.camPos = W3.curPos.clone(); W3.camLook = W3.curLook.clone(); W3.free = null; setHover(null); }

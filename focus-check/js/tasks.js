@@ -196,14 +196,14 @@ function doTasks(round, seconds, n, of){
     const allowed = new Set([...round.steps, ...round.superseded, ...round.distractors]);
     const panel = $("#taskpanel"), menu = $("#actmenu"), tip = $("#proptip");
     const chosen = [], t0 = now(), end = t0 + seconds;
-    let done = false, down = null, dragged = false, overlay = null;
+    let done = false, down = null, overlay = null, lastPt = null;
     if (!stackedChair || stackedChair.parent !== room.scene) stackedChair = makeStackedChair(room.scene);
     // start of a round: whatever you were carrying goes back where it came from
     if (WORK.hand && WORK.hand.obj && !WORK.hand.keep) restore(WORK.hand.obj);
     WORK.hand = null;
     panel.hidden = false;
     panel.innerHTML = `<div class="timer"></div><p class="kicker">Instructions ${n} of ${of} · ${round.steps.length} steps</p>
-      <p class="tq">Now do what he asked, in order.</p><p class="hint">Drag to look around. Click things to pick them up or use them. Arrow keys turn too.</p>
+      <p class="tq">Now do what he asked, in order.</p><p class="hint">Move the mouse to look around. Click things to pick them up or use them. Arrow keys turn too.</p>
       <p class="hand-chip" aria-live="polite"></p>
       <ol class="steps-chosen done-list" aria-label="What you have done"></ol>
       <div class="task-actions"><button type="button" class="btn ghost" data-act="turn">Turn around</button><button type="button" class="btn" data-act="done" disabled>I'm done</button></div>
@@ -493,28 +493,28 @@ function doTasks(round, seconds, n, of){
       }
     };
 
-    /* dragging pins the scene to the cursor: whatever you grab moves exactly as far as the mouse does */
-    const dragLook = (dx, dy) => { if (!W3.free || !W3.camera) return; const focal = (innerHeight/2)/Math.tan(W3.camera.fov*Math.PI/360); W3.free.snap = performance.now(); turnBy(dx/focal, dy/focal); };
-    /* --- input --- */
+    /* --- input: the view follows the mouse (see render3D), so all that is left here is hovering and clicking --- */
     const onUI = e => e.target && e.target.closest && e.target.closest(".taskpanel, .actmenu, .hud, .veil, .results, .work");
-    const pd = e => { if (onUI(e) || overlay) return; closeMenu(); down = { x:e.clientX, y:e.clientY }; dragged = false; };
+    const hoverAt = (x, y) => {
+      const p = pickProp(x, y);
+      setHover(p); document.body.style.cursor = p ? "pointer" : "";
+      if (p) { tip.hidden = false; tip.textContent = p.userData.task.label; tip.style.left = (x + 14) + "px"; tip.style.top = (y + 16) + "px"; } else tip.hidden = true;
+    };
+    const pd = e => { if (onUI(e) || overlay) return; closeMenu(); down = { x:e.clientX, y:e.clientY }; };
     const pm = e => {
-      if (down) {
-        const dx = e.clientX - down.x, dy = e.clientY - down.y;
-        if (dragged || Math.abs(dx) + Math.abs(dy) > 5) { dragged = true; dragLook(dx, dy); down = { x:e.clientX, y:e.clientY }; tip.hidden = true; setHover(null); }
-        return;
-      }
-      if (onUI(e) || overlay || !menu.hidden) { tip.hidden = true; if (overlay) setHover(null); document.body.style.cursor = ""; return; }
-      const p = pickProp(e.clientX, e.clientY);
-      setHover(p); document.body.style.cursor = p ? "pointer" : "grab";
-      if (p) { tip.hidden = false; tip.textContent = p.userData.task.label; tip.style.left = (e.clientX + 14) + "px"; tip.style.top = (e.clientY + 16) + "px"; } else tip.hidden = true;
+      if (onUI(e) || overlay || !menu.hidden) { lastPt = null; tip.hidden = true; if (overlay) setHover(null); document.body.style.cursor = ""; return; }
+      lastPt = { x:e.clientX, y:e.clientY };
+      hoverAt(e.clientX, e.clientY);
     };
     const pu = e => {
-      if (!down) return; const wasDrag = dragged; down = null; dragged = false;
-      if (wasDrag || onUI(e) || done || paused || overlay) return;
+      if (!down) return; down = null;
+      if (onUI(e) || done || paused || overlay) return;
       const p = pickProp(e.clientX, e.clientY); if (!p) return;
       tip.hidden = true; interact(p, e.clientX, e.clientY);
     };
+    // the view keeps turning for a moment after the mouse stops, so keep re-checking what is under the cursor
+    const hv = () => { if (lastPt && !overlay && menu.hidden && !done && !paused) hoverAt(lastPt.x, lastPt.y); };
+    ticks.add(hv);
     const kd = e => {
       if (e.key === "Escape") { if (overlay) closeOverlay(); else closeMenu(); return; }
       if (overlay || (e.target && e.target.closest && e.target.closest("input, textarea"))) return;
@@ -530,7 +530,7 @@ function doTasks(round, seconds, n, of){
       if (overlay) closeOverlay();
       workEl().removeEventListener("click", onWorkClick);
       removeEventListener("pointerdown", pd); removeEventListener("pointermove", pm); removeEventListener("pointerup", pu); removeEventListener("keydown", kd);
-      ticks.delete(tt); closeMenu(); closeWorkEl(); tip.hidden = true; panel.hidden = true; panel.innerHTML = ""; setHover(null); document.body.style.cursor = "";
+      ticks.delete(tt); ticks.delete(hv); closeMenu(); closeWorkEl(); tip.hidden = true; panel.hidden = true; panel.innerHTML = ""; setHover(null); document.body.style.cursor = "";
     };
     taskCleanup = cleanup;
     const result = () => ({ chosen:chosen.slice(), seconds:+(now() - t0).toFixed(1), work:JSON.parse(JSON.stringify(WORK.log)) });
