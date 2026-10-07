@@ -309,12 +309,12 @@ function doTasks(round, seconds, n, of){
       const R = WORK.reader, pen = WORK.hand && WORK.hand.kind === "pen" ? WORK.hand : null;
       const words = (para, pi) => para.split(/(\s+)/).map((w, wi) => /\s+/.test(w) ? w : (() => {
         const key = `${pi}:${wi}`, mk = R.marks[key];
-        return `<button type="button" class="word${mk ? " marked" : ""}" data-k="${key}" style="${mk ? `--mark:${INK[mk]}` : ""}">${esc(w)}</button>`;
+        return `<button type="button" class="bword${mk ? " marked" : ""}" data-k="${key}" style="${mk ? `--mark:${INK[mk]}` : ""}">${esc(w)}</button>`;
       })()).join("");
       const el = openWorkEl("reader", R.swapped ? "Reading book (your neighbour's copy)" : "Reading book",
         `<div class="page-read"><h4>${esc(READER.title)}</h4>${READER.paras.map((p, i) => `<p>${words(p, i)}</p>`).join("")}</div>
          <p class="work-note">${pen ? `Tap a word to underline it with the ${esc(pen.label.toLowerCase())}. Tap it again to rub it out.` : "You need a pen to underline anything. Close the book and pick one up."}</p>`);
-      el.querySelectorAll(".word").forEach(b => b.addEventListener("click", () => {
+      el.querySelectorAll(".bword").forEach(b => b.addEventListener("click", () => {
         if (!pen) { el.querySelector(".work-note").classList.add("warn"); return; }
         const k = b.dataset.k;
         if (R.marks[k]) { delete R.marks[k]; b.classList.remove("marked"); } else { R.marks[k] = pen.colour; b.classList.add("marked"); b.style.setProperty("--mark", INK[pen.colour]); }

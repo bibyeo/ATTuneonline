@@ -272,10 +272,10 @@ body.graded .vignette{background:none}
 .page-read{background:#FFFDF5;color:var(--ink);padding:1rem 1.2rem;box-shadow:0 0 0 3px var(--ink),6px 6px 0 0 rgba(0,0,0,.3);font-size:1.12rem;line-height:1.9}
 .page-read h4{margin:0 0 .4rem;font-family:var(--display);font-size:1.1rem}
 .page-read p{margin:0 0 .7rem}
-.word{all:unset;cursor:pointer;padding:0 1px;border-bottom:3px solid transparent}
-.word:hover{background:rgba(246,166,35,.25)}
-.word:focus-visible{outline:2px solid var(--focus)}
-.word.marked{border-bottom-color:var(--mark,#2451A6)}
+.bword{all:unset;cursor:pointer;padding:0 1px;border-bottom:3px solid transparent}
+.bword:hover{background:rgba(246,166,35,.25)}
+.bword:focus-visible{outline:2px solid var(--focus)}
+.bword.marked{border-bottom-color:var(--mark,#2451A6)}
 /* cones */
 .cone-rows{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
 .cone-rows h4{margin:.2rem 0 .4rem;font-size:.9rem;color:var(--amber-2)}
